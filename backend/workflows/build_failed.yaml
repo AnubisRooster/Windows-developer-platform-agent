@@ -1,10 +1,25 @@
-name: build_failed
-trigger: jenkins.build.failed
-description: Notify channel when Jenkins build fails
+name: Jenkins Failure Alert
+trigger:
+  type: jenkins.build.failed
+description: Fetch logs, summarize with IronClaw, and notify Slack when a Jenkins build fails
 enabled: true
 actions:
+  - tool: jenkins.fetch_build_logs
+    description: Fetch build logs from Jenkins
+    args:
+      job: "{{ job_name }}"
+      build_number: "{{ build_number }}"
+    on_failure: continue
+
+  - tool: agent.summarize_logs
+    description: Use IronClaw to summarize the failure
+    args:
+      text: "{{ build_log }}"
+    on_failure: continue
+
   - tool: slack.send_message
+    description: Notify the team about the failure
     args:
       channel: "#dev-notifications"
-      text: "Build failed: {{ job_name }} #{{ build_number }} — {{ url }}"
+      text: "Build failed: {{ job_name }} #{{ build_number }}\n\nSummary: {{ summary }}\n\nURL: {{ url }}"
     on_failure: fail

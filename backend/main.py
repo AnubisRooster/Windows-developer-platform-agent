@@ -1,12 +1,16 @@
 """
-Backend CLI entry point for the Windows Developer Platform Agent.
+Developer AI Platform - Backend CLI entry point.
 
-Commands: run (full orchestrator + workflows + webhooks), webhook-server (webhooks only).
-All file references use pathlib.Path.
+Commands:
+  run           - Full platform: IronClaw + workflows + webhooks + knowledge
+  webhook-server - Webhooks only
+  index         - Run repository intelligence indexers
+  reindex-embeddings - Generate embeddings for all documents
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import sys
@@ -15,7 +19,6 @@ from pathlib import Path
 import click
 import uvicorn
 
-# Ensure project root is on path when running as module
 _BACKEND_DIR = Path(__file__).resolve().parent
 _PROJECT_ROOT = _BACKEND_DIR.parent
 if str(_PROJECT_ROOT) not in sys.path:
@@ -26,6 +29,9 @@ from backend.agent.memory import ConversationMemory
 from backend.agent.orchestrator import Orchestrator
 from backend.database.models import init_db
 from backend.events.bus import EventBus
+from backend.knowledge.embeddings import EmbeddingStore
+from backend.knowledge.graph import KnowledgeGraph
+from backend.knowledge.tools import KnowledgeTools
 from backend.tools.registry import ToolRegistry, ToolSchema
 from backend.webhooks.server import create_app
 from backend.workflows.engine import WorkflowEngine
@@ -38,12 +44,10 @@ logger = logging.getLogger(__name__)
 
 
 def _workflows_dir() -> Path:
-    """Workflows directory using pathlib."""
     return _BACKEND_DIR / "workflows"
 
 
 def _build_ironclaw() -> IronClawClient:
-    """Build IronClaw client from env."""
     return IronClawClient(
         ironclaw_url=os.environ.get("IRONCLAW_URL", "http://127.0.0.1:3000"),
         openrouter_api_key=os.environ.get("OPENROUTER_API_KEY"),
@@ -54,7 +58,7 @@ def _build_ironclaw() -> IronClawClient:
 
 
 def _register_tools(registry: ToolRegistry) -> None:
-    """Register integration tools in the registry."""
+    """Register all integration tools and knowledge tools."""
     from backend.integrations import (
         confluence,
         github_integration,
@@ -89,6 +93,11 @@ def _register_tools(registry: ToolRegistry) -> None:
         "github.get_repo_activity",
         lambda owner, repo, limit=10: github_integration.get_repo_activity(owner, repo, limit),
         ToolSchema("github.get_repo_activity", "Get repo activity", {"type": "object", "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["owner", "repo"]}),
+    )
+    registry.register(
+        "github.search_repo",
+        lambda query, limit=10: github_integration.search_repos(query, limit),
+        ToolSchema("github.search_repo", "Search GitHub repositories", {"type": "object", "properties": {"query": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["query"]}),
     )
 
     # Slack
@@ -171,9 +180,9 @@ def _register_tools(registry: ToolRegistry) -> None:
         ToolSchema("gmail.read_emails", "Read emails", {"type": "object", "properties": {"query": {"type": "string"}, "max_results": {"type": "integer"}}, "required": []}),
     )
     registry.register(
-        "gmail.summarize_thread",
+        "gmail.read_thread",
         lambda thread_id: gmail.summarize_thread(thread_id),
-        ToolSchema("gmail.summarize_thread", "Summarize email thread", {"type": "object", "properties": {"thread_id": {"type": "string"}}, "required": ["thread_id"]}),
+        ToolSchema("gmail.read_thread", "Read and summarize an email thread", {"type": "object", "properties": {"thread_id": {"type": "string"}}, "required": ["thread_id"]}),
     )
     registry.register(
         "gmail.send_email",
@@ -187,21 +196,36 @@ def _register_tools(registry: ToolRegistry) -> None:
     )
 
 
+def _register_knowledge_tools(registry: ToolRegistry, knowledge_tools: KnowledgeTools) -> None:
+    """Register knowledge query tools in the capability registry."""
+    for tool_def in knowledge_tools.get_tool_definitions():
+        name = tool_def["name"]
+        schema = ToolSchema(name, tool_def["description"], tool_def["parameters"])
+
+        if name == "knowledge.search":
+            registry.register(name, lambda **kwargs: asyncio.get_event_loop().run_until_complete(knowledge_tools.search(**kwargs)), schema)
+        elif name == "knowledge.find_repo":
+            registry.register(name, lambda **kwargs: knowledge_tools.find_repo(**kwargs), schema)
+        elif name == "knowledge.trace_commit":
+            registry.register(name, lambda **kwargs: knowledge_tools.trace_commit(**kwargs), schema)
+        elif name == "knowledge.find_related_docs":
+            registry.register(name, lambda **kwargs: knowledge_tools.find_related_docs(**kwargs), schema)
+        elif name == "knowledge.explain_system":
+            registry.register(name, lambda **kwargs: asyncio.get_event_loop().run_until_complete(knowledge_tools.explain_system(**kwargs)), schema)
+
+
 @click.group()
 def cli() -> None:
-    """Windows Developer Platform Agent - Backend CLI."""
+    """Developer AI Platform - Backend CLI."""
     pass
 
 
 @cli.command()
-@click.option("--host", "-h", default="127.0.0.1", help="Webhook host")
-@click.option("--port", "-p", default=8080, type=int, help="Webhook port")
+@click.option("--host", "-h", default="127.0.0.1", help="Server host")
+@click.option("--port", "-p", default=8080, type=int, help="Server port")
 @click.option("--reload", is_flag=True, help="Auto-reload on changes")
 def run(host: str, port: int, reload: bool) -> None:
-    """
-    Full run: IronClaw orchestrator + workflow engine + FastAPI webhooks + dashboard API.
-    Binds to WEBHOOK_HOST:WEBHOOK_PORT from env or --host/--port.
-    """
+    """Full platform: IronClaw + workflows + event bus + knowledge + webhooks."""
     host = os.environ.get("WEBHOOK_HOST", host)
     port = int(os.environ.get("WEBHOOK_PORT", str(port)))
 
@@ -210,10 +234,16 @@ def run(host: str, port: int, reload: bool) -> None:
     registry = ToolRegistry()
     _register_tools(registry)
 
+    graph = KnowledgeGraph()
+    embeddings = EmbeddingStore()
+    knowledge_tools = KnowledgeTools(graph, embeddings)
+    _register_knowledge_tools(registry, knowledge_tools)
+
     memory = ConversationMemory()
     orchestrator = Orchestrator(ironclaw_client=ironclaw, tool_registry=registry, memory=memory)
 
-    event_bus = EventBus(persist=True)
+    redis_url = os.environ.get("REDIS_URL", "")
+    event_bus = EventBus(persist=True, redis_url=redis_url)
     workflows_dir = _workflows_dir()
     workflow_engine = WorkflowEngine(event_bus=event_bus, workflows_dir=workflows_dir, tool_executor=orchestrator)
     workflow_engine.load_workflows()
@@ -226,18 +256,17 @@ def run(host: str, port: int, reload: bool) -> None:
         ironclaw_client=ironclaw,
     )
 
-    logger.info("Starting backend at http://%s:%s", host, port)
+    logger.info("Starting Developer AI Platform at http://%s:%s", host, port)
+    logger.info("Registered %d tools, %d workflows", len(registry.list_tools()), len(workflow_engine._workflows))
     uvicorn.run(app, host=host, port=port, reload=reload)
 
 
 @cli.command("webhook-server")
-@click.option("--host", "-h", default="127.0.0.1", help="Webhook host")
-@click.option("--port", "-p", default=8080, type=int, help="Webhook port")
+@click.option("--host", "-h", default="127.0.0.1", help="Server host")
+@click.option("--port", "-p", default=8080, type=int, help="Server port")
 @click.option("--reload", is_flag=True, help="Auto-reload on changes")
 def webhook_server(host: str, port: int, reload: bool) -> None:
-    """
-    Webhook server only: no orchestrator. Receives webhooks and dashboard API.
-    """
+    """Webhook server only: receives events, no orchestrator."""
     host = os.environ.get("WEBHOOK_HOST", host)
     port = int(os.environ.get("WEBHOOK_PORT", str(port)))
 
@@ -248,8 +277,44 @@ def webhook_server(host: str, port: int, reload: bool) -> None:
     uvicorn.run(app, host=host, port=port, reload=reload)
 
 
+@cli.command("index")
+@click.option("--github", "-g", multiple=True, help="GitHub repos to index (owner/repo)")
+@click.option("--jira", "-j", multiple=True, help="Jira projects to index")
+@click.option("--confluence", "-c", multiple=True, help="Confluence spaces to index")
+@click.option("--jenkins/--no-jenkins", default=True, help="Index Jenkins pipelines")
+@click.option("--embeddings/--no-embeddings", default=True, help="Generate embeddings after indexing")
+def index(github: tuple, jira: tuple, confluence: tuple, jenkins: bool, embeddings: bool) -> None:
+    """Run repository intelligence indexers."""
+    init_db()
+    from backend.knowledge.indexer import RepositoryIntelligenceIndexer
+
+    indexer = RepositoryIntelligenceIndexer()
+    results = indexer.full_index(
+        github_repos=list(github) if github else None,
+        jira_projects=list(jira) if jira else None,
+        confluence_spaces=list(confluence) if confluence else None,
+        include_jenkins=jenkins,
+    )
+    logger.info("Indexing complete: %s", results)
+
+    if embeddings:
+        logger.info("Generating embeddings...")
+        store = EmbeddingStore()
+        stats = asyncio.run(store.index_all_documents())
+        logger.info("Embedding complete: %s", stats)
+
+
+@cli.command("reindex-embeddings")
+@click.option("--source", "-s", default=None, help="Filter by source")
+def reindex_embeddings(source: str | None) -> None:
+    """Regenerate embeddings for all documents."""
+    init_db()
+    store = EmbeddingStore()
+    stats = asyncio.run(store.index_all_documents(source=source))
+    logger.info("Reindex complete: %s", stats)
+
+
 def main() -> None:
-    """Entry point."""
     cli()
 
 

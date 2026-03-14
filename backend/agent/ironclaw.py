@@ -1,11 +1,18 @@
 """
-IronClawClient - HTTP client for IronClaw runtime (Rust AI engine) with OpenRouter fallback.
+IronClawClient - HTTP client for IronClaw Rust reasoning engine.
 
-Uses httpx async client. Gracefully falls back to OpenRouter when IronClaw is unavailable.
+IronClaw runs as a separate service and provides:
+  - /interpret: message interpretation with tool-calling
+  - /plan: task planning (decompose a goal into steps with tool selections)
+  - /select-tools: choose optimal tools for a given task from available capabilities
+  - /summarize: text summarization
+
+Falls back to OpenRouter LLM API when IronClaw is unavailable.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from typing import Any
@@ -17,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 class IronClawClient:
     """
-    HTTP client for IronClaw runtime gateway, with OpenRouter fallback.
+    HTTP client for IronClaw runtime gateway.
 
-    Env vars: IRONCLAW_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL, OPENROUTER_BASE_URL.
+    Env: IRONCLAW_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL, OPENROUTER_BASE_URL.
     """
 
     def __init__(
@@ -40,11 +47,13 @@ class IronClawClient:
         self._use_openrouter = False
 
     async def _client(self) -> httpx.AsyncClient:
-        """Get httpx async client."""
         return httpx.AsyncClient(timeout=self.timeout)
 
+    # -------------------------------------------------------------------
+    # Health
+    # -------------------------------------------------------------------
+
     async def health(self) -> dict[str, Any]:
-        """Check IronClaw health. Returns status dict or empty on failure."""
         async with httpx.AsyncClient(timeout=5.0) as client:
             try:
                 resp = await client.get(f"{self.ironclaw_url}/api/health")
@@ -54,26 +63,30 @@ class IronClawClient:
                 logger.debug("IronClaw health check failed: %s", e)
                 return {}
 
-    async def _try_ironclaw_interpret(self, message: str, tools: list[dict] | None = None) -> dict[str, Any] | None:
-        """Try IronClaw interpret endpoint. Returns None on failure."""
+    # -------------------------------------------------------------------
+    # IronClaw native endpoints
+    # -------------------------------------------------------------------
+
+    async def _ironclaw_post(self, path: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+        """POST to an IronClaw endpoint. Returns None on failure."""
         async with await self._client() as client:
             try:
-                payload: dict[str, Any] = {"message": message}
-                if tools:
-                    payload["tools"] = tools
-                resp = await client.post(f"{self.ironclaw_url}/interpret", json=payload)
+                resp = await client.post(f"{self.ironclaw_url}{path}", json=payload)
                 resp.raise_for_status()
                 return resp.json()
             except (httpx.RequestError, httpx.HTTPStatusError) as e:
-                logger.debug("IronClaw interpret failed: %s", e)
+                logger.debug("IronClaw %s failed: %s", path, e)
                 return None
+
+    # -------------------------------------------------------------------
+    # OpenRouter fallback
+    # -------------------------------------------------------------------
 
     async def _openrouter_chat(
         self,
         messages: list[dict[str, str]],
         tools: list[dict] | None = None,
     ) -> dict[str, Any]:
-        """Call OpenRouter chat completions API."""
         async with await self._client() as client:
             headers = {"Content-Type": "application/json"}
             if self.openrouter_api_key:
@@ -93,14 +106,32 @@ class IronClawClient:
             resp.raise_for_status()
             return resp.json()
 
+    def _extract_chat_response(self, data: dict[str, Any]) -> dict[str, Any]:
+        choices = data.get("choices", [])
+        if not choices:
+            return {"content": "", "tool_calls": [], "raw": data}
+        msg = choices[0].get("message", {})
+        return {
+            "content": msg.get("content", ""),
+            "tool_calls": msg.get("tool_calls", []),
+            "raw": data,
+        }
+
+    # -------------------------------------------------------------------
+    # Core: Interpret (message → response + tool calls)
+    # -------------------------------------------------------------------
+
     async def interpret(self, message: str, tools: list[dict] | None = None) -> dict[str, Any]:
         """
-        Interpret user message. Returns dict with:
-        - content: str (assistant text)
-        - tool_calls: list (optional)
-        - raw: full API response
+        Interpret user message. Returns:
+          - content: str (assistant text)
+          - tool_calls: list (tool invocations to execute)
+          - raw: full response
         """
-        result = await self._try_ironclaw_interpret(message, tools)
+        payload: dict[str, Any] = {"message": message}
+        if tools:
+            payload["tools"] = tools
+        result = await self._ironclaw_post("/interpret", payload)
         if result is not None:
             return result
 
@@ -110,25 +141,129 @@ class IronClawClient:
             {"role": "user", "content": message},
         ]
         data = await self._openrouter_chat(messages, tools)
-        choices = data.get("choices", [])
-        if not choices:
-            return {"content": "", "tool_calls": [], "raw": data}
-        msg = choices[0].get("message", {})
-        content = msg.get("content", "")
-        tool_calls = msg.get("tool_calls", [])
-        return {"content": content, "tool_calls": tool_calls, "raw": data}
+        return self._extract_chat_response(data)
 
-    async def summarize(self, text: str) -> str:
-        """Summarize text. Uses IronClaw or OpenRouter."""
-        result = await self._try_ironclaw_interpret(
-            f"Summarize the following in 2-3 sentences:\n\n{text}",
-            tools=None,
+    # -------------------------------------------------------------------
+    # Task Planning
+    # -------------------------------------------------------------------
+
+    async def plan(
+        self,
+        goal: str,
+        tools: list[dict] | None = None,
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Decompose a goal into an ordered list of steps with tool selections.
+
+        Returns:
+          - steps: list of { description, tool, args_template }
+          - reasoning: str
+        """
+        payload = {"goal": goal}
+        if tools:
+            payload["tools"] = tools
+        if context:
+            payload["context"] = context
+        result = await self._ironclaw_post("/plan", payload)
+        if result is not None:
+            return result
+
+        self._use_openrouter = True
+        tool_descriptions = ""
+        if tools:
+            tool_descriptions = "\n".join(
+                f"- {t['name']}: {t.get('description', '')}" for t in tools
+            )
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a task planner for a developer platform. "
+                    "Given a goal and available tools, produce a plan as a JSON object with:\n"
+                    '  "reasoning": brief explanation\n'
+                    '  "steps": [{  "description": ..., "tool": tool_name, "args_template": {...} }]\n'
+                    "Respond ONLY with valid JSON."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Goal: {goal}\n\n"
+                    f"Available tools:\n{tool_descriptions}\n\n"
+                    f"Context: {json.dumps(context or {}, default=str)}"
+                ),
+            },
+        ]
+        data = await self._openrouter_chat(messages)
+        content = data.get("choices", [{}])[0].get("message", {}).get("content", "{}")
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            return {"reasoning": content, "steps": []}
+
+    # -------------------------------------------------------------------
+    # Tool Selection
+    # -------------------------------------------------------------------
+
+    async def select_tools(
+        self,
+        task: str,
+        tools: list[dict],
+    ) -> list[dict[str, Any]]:
+        """
+        Given a task description and available tools, select the best tools to use.
+
+        Returns list of { name, reason, args_hint }.
+        """
+        payload = {"task": task, "tools": tools}
+        result = await self._ironclaw_post("/select-tools", payload)
+        if result is not None:
+            return result if isinstance(result, list) else result.get("selected", [])
+
+        self._use_openrouter = True
+        tool_descriptions = "\n".join(
+            f"- {t['name']}: {t.get('description', '')}" for t in tools
         )
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You select tools for developer platform tasks. "
+                    "Return a JSON array of objects: "
+                    '[{ "name": tool_name, "reason": why, "args_hint": {} }]. '
+                    "Respond ONLY with valid JSON."
+                ),
+            },
+            {"role": "user", "content": f"Task: {task}\n\nTools:\n{tool_descriptions}"},
+        ]
+        data = await self._openrouter_chat(messages)
+        content = data.get("choices", [{}])[0].get("message", {}).get("content", "[]")
+        try:
+            parsed = json.loads(content)
+            return parsed if isinstance(parsed, list) else []
+        except json.JSONDecodeError:
+            return []
+
+    # -------------------------------------------------------------------
+    # Summarization
+    # -------------------------------------------------------------------
+
+    async def summarize(self, text: str, max_sentences: int = 3) -> str:
+        """Summarize text. Uses IronClaw or OpenRouter."""
+        result = await self._ironclaw_post(
+            "/summarize",
+            {"text": text, "max_sentences": max_sentences},
+        )
+        if result and result.get("summary"):
+            return result["summary"]
         if result and result.get("content"):
             return result["content"]
 
+        self._use_openrouter = True
         messages = [
-            {"role": "system", "content": "You summarize text concisely."},
+            {"role": "system", "content": f"Summarize text in at most {max_sentences} sentences. Be concise."},
             {"role": "user", "content": text},
         ]
         data = await self._openrouter_chat(messages)
@@ -137,25 +272,23 @@ class IronClawClient:
             return choices[0].get("message", {}).get("content", "")
         return ""
 
+    # -------------------------------------------------------------------
+    # Test & Switch
+    # -------------------------------------------------------------------
+
     async def test_model(self) -> dict[str, Any]:
-        """Test model connectivity. Returns status dict."""
         health = await self.health()
         if health:
             return {"provider": "ironclaw", "status": "ok", "details": health}
         if self.openrouter_api_key:
             try:
                 await self._openrouter_chat([{"role": "user", "content": "Say 'ok'"}])
-                return {
-                    "provider": "openrouter",
-                    "status": "ok",
-                    "model": self.openrouter_model,
-                }
+                return {"provider": "openrouter", "status": "ok", "model": self.openrouter_model}
             except Exception as e:
                 return {"provider": "openrouter", "status": "error", "error": str(e)}
         return {"provider": "none", "status": "error", "error": "No IronClaw and no OpenRouter API key"}
 
     async def switch_model(self, provider: str, model: str) -> None:
-        """Switch to different provider/model (for OpenRouter fallback)."""
         if provider.lower() == "openrouter":
             self.openrouter_model = model
             self._use_openrouter = True

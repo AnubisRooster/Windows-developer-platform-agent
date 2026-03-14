@@ -1,12 +1,13 @@
-# Windows Developer Platform Agent - Configuration
-# Uses pathlib-friendly paths (forward slashes work on Windows)
+# Developer AI Platform - Configuration
 
 agent:
-  name: Windows Developer Platform Agent
-  version: 1.0.0
+  name: Developer AI Platform
+  version: 2.0.0
   system_prompt: |
-    You are a helpful developer platform assistant.
-    You connect Slack, GitHub, Jira, Jenkins, Gmail, and Confluence.
+    You are an internal developer AI platform assistant.
+    You automate engineering workflows, reason over events,
+    understand repository relationships, and answer engineering
+    questions using a knowledge graph.
   max_tokens: 4096
   temperature: 0.7
 
@@ -14,21 +15,59 @@ ironclaw:
   url: ${IRONCLAW_URL:-http://localhost:3000}
   timeout: 30
   retries: 3
+  endpoints:
+    interpret: /interpret
+    plan: /plan
+    select_tools: /select-tools
+    summarize: /summarize
+    health: /api/health
 
 server:
   host: 127.0.0.1
   port: 8080
   workers: 1
   log_level: info
-  # Windows path for logs (relative to project root)
   log_dir: logs
 
 database:
   url: ${DATABASE_URL:-postgresql://claw:claw@localhost:5432/clawagent}
-  # SQLite fallback - Windows path
-  path: data/agent.db
+  path: data/platform.db
   echo: false
   pool_size: 5
+
+redis:
+  url: ${REDIS_URL:-redis://localhost:6379/0}
+  stream_key: platform:events
+  consumer_group: platform-workers
+
+embeddings:
+  provider: ${EMBEDDING_PROVIDER:-openai}
+  model: ${EMBEDDING_MODEL:-text-embedding-3-small}
+  dimensions: 1536
+  chunk_size: 1000
+  chunk_overlap: 200
+
+knowledge:
+  graph:
+    node_types:
+      - repository
+      - file
+      - commit
+      - pull_request
+      - jira_issue
+      - pipeline
+      - documentation
+      - engineer
+    edge_types:
+      - repo_contains_file
+      - file_modified_by_commit
+      - commit_part_of_pr
+      - pr_links_to_issue
+      - repo_deployed_by_pipeline
+      - authored_by
+      - reviewed_by
+      - assigned_to
+      - documents_repo
 
 integrations:
   slack:
@@ -68,7 +107,6 @@ integrations:
     token_file: token.json
 
 workflows:
-  # Workflow definitions directory - pathlib compatible
   dir: workflows
   auto_load: true
   default_timeout: 60

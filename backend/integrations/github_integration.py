@@ -122,3 +122,23 @@ def get_repo_activity(owner: str, repo: str, limit: int = 10) -> list[dict[str, 
     except Exception as e:
         logger.debug("get_repo_activity error: %s", e)
     return []
+
+
+def search_repos(query: str, limit: int = 10) -> list[dict[str, Any]]:
+    """Search GitHub repositories."""
+    try:
+        result = _api("GET", "/search/repositories", params={"q": query, "per_page": limit})
+        items = result.get("items", [])
+        return [
+            {
+                "full_name": r.get("full_name"),
+                "description": r.get("description"),
+                "language": r.get("language"),
+                "stars": r.get("stargazers_count"),
+                "url": r.get("html_url"),
+            }
+            for r in items
+        ]
+    except Exception as e:
+        logger.debug("search_repos error: %s", e)
+        return []

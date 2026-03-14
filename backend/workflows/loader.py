@@ -1,13 +1,18 @@
 """
 Workflow loader - load YAML workflow definitions from disk.
 
-Uses pathlib.Path for all file operations.
+Supports the new trigger format:
+  trigger:
+    type: jenkins.build.failed
+
+And the legacy flat trigger format:
+  trigger: jenkins.build.failed
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +28,7 @@ class WorkflowAction:
     tool: str
     description: str = ""
     args: dict[str, Any] | None = None
-    on_failure: str = "fail"  # fail, continue, abort
+    on_failure: str = "fail"
 
 
 @dataclass
@@ -34,15 +39,40 @@ class WorkflowDefinition:
     trigger: str
     description: str = ""
     enabled: bool = True
-    actions: list[WorkflowAction] = None
+    actions: list[WorkflowAction] = field(default_factory=list)
 
-    def __post_init__(self) -> None:
-        if self.actions is None:
-            self.actions = []
+
+def _parse_trigger(raw: Any) -> str:
+    """
+    Parse trigger from YAML. Supports:
+      trigger: "github.pull_request.opened"
+      trigger:
+        type: "github.pull_request.opened"
+    """
+    if isinstance(raw, str):
+        return raw
+    if isinstance(raw, dict):
+        return raw.get("type", "")
+    return ""
+
+
+def _parse_actions(raw_actions: list[Any]) -> list[WorkflowAction]:
+    """Parse action list. Supports dict format and plain string (tool name only)."""
+    actions = []
+    for a in raw_actions:
+        if isinstance(a, dict):
+            actions.append(WorkflowAction(
+                tool=a.get("tool", ""),
+                description=a.get("description", ""),
+                args=a.get("args"),
+                on_failure=a.get("on_failure", "fail"),
+            ))
+        elif isinstance(a, str):
+            actions.append(WorkflowAction(tool=a))
+    return actions
 
 
 def load_workflow(path: Path) -> WorkflowDefinition | None:
-    """Load a single workflow from YAML file."""
     if not path.exists():
         logger.warning("Workflow file not found: %s", path)
         return None
@@ -56,18 +86,12 @@ def load_workflow(path: Path) -> WorkflowDefinition | None:
     if not data or not isinstance(data, dict):
         return None
 
-    actions = []
-    for a in data.get("actions", []):
-        if isinstance(a, dict):
-            actions.append(WorkflowAction(
-                tool=a.get("tool", ""),
-                description=a.get("description", ""),
-                args=a.get("args"),
-                on_failure=a.get("on_failure", "fail"),
-            ))
+    trigger = _parse_trigger(data.get("trigger", ""))
+    actions = _parse_actions(data.get("actions", []))
+
     return WorkflowDefinition(
         name=data.get("name", path.stem),
-        trigger=data.get("trigger", ""),
+        trigger=trigger,
         description=data.get("description", ""),
         enabled=data.get("enabled", True),
         actions=actions,
@@ -75,16 +99,12 @@ def load_workflow(path: Path) -> WorkflowDefinition | None:
 
 
 def load_all_workflows(directory: Path) -> dict[str, WorkflowDefinition]:
-    """Load all YAML workflows from a directory."""
     result: dict[str, WorkflowDefinition] = {}
     if not directory.exists() or not directory.is_dir():
         return result
-    for p in directory.glob("*.yaml"):
-        wf = load_workflow(p)
-        if wf and wf.enabled:
-            result[wf.name] = wf
-    for p in directory.glob("*.yml"):
-        wf = load_workflow(p)
-        if wf and wf.enabled:
-            result[wf.name] = wf
+    for pattern in ("*.yaml", "*.yml"):
+        for p in directory.glob(pattern):
+            wf = load_workflow(p)
+            if wf and wf.enabled:
+                result[wf.name] = wf
     return result

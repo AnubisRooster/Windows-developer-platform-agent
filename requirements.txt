@@ -1,9 +1,11 @@
-# Windows Developer Platform Agent - Dependencies
+# Developer AI Platform - Dependencies
 # All paths use pathlib; platform-agnostic Python.
 
 # Core
 httpx>=0.25.0
+pydantic>=2.0.0
 pydantic-settings>=2.0.0
+click>=8.1.0
 
 # LLM / Agent
 # (OpenRouter, OpenAI, Ollama use same chat API)
@@ -20,6 +22,11 @@ google-auth-httplib2>=0.1.0
 
 # Database
 SQLAlchemy>=2.0.0
+psycopg2-binary>=2.9.0
+pgvector>=0.2.0
+
+# Redis (event bus)
+redis>=5.0.0
 
 # Web
 FastAPI>=0.100.0
