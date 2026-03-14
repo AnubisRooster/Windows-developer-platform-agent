@@ -1,0 +1,21 @@
+name: pr_opened
+trigger: github.pull_request.opened
+description: Summarize new PRs, notify Slack, link Jira
+enabled: true
+actions:
+  - tool: github.summarize_pr
+    description: Summarize the pull request
+    args:
+      owner: "{{ repository.owner.login }}"
+      repo: "{{ repository.name }}"
+      pr_number: "{{ number }}"
+  - tool: slack.send_message
+    args:
+      channel: "#dev-notifications"
+      text: "New PR: {{ pull_request.title }} by {{ pull_request.user.login }} — {{ pull_request.html_url }}"
+    on_failure: continue
+  - tool: jira.link_github_issue
+    args:
+      ticket_key: "{{ jira_ticket }}"
+      github_url: "{{ pull_request.html_url }}"
+    on_failure: continue

@@ -1,0 +1,9 @@
+{
+  "name": "claw-agent",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Windows Developer Platform Agent",
+  "scripts": {
+    "start": "pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/start.ps1"
+  }
+}

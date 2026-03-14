@@ -1,0 +1,10 @@
+name: jira_created
+trigger: jira.issue.created
+description: Post new Jira ticket to Slack
+enabled: true
+actions:
+  - tool: slack.send_message
+    args:
+      channel: "#dev-notifications"
+      text: "New Jira ticket: {{ key }} — {{ summary }}"
+    on_failure: continue

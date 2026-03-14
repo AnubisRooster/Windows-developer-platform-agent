@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply text-slate-100;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-border bg-surface-800 p-4 shadow-sm;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-accent-green/20 text-accent-green border border-accent-green/40;
+  }
+
+  .badge-error {
+    @apply badge bg-accent-red/20 text-accent-red border border-accent-red/40;
+  }
+
+  .badge-warning {
+    @apply badge bg-accent-amber/20 text-accent-amber border border-accent-amber/40;
+  }
+
+  .badge-info {
+    @apply badge bg-accent-blue/20 text-accent-blue border border-accent-blue/40;
+  }
+
+  .badge-neutral {
+    @apply badge bg-surface-700 text-slate-400 border border-border;
+  }
+
+  .status-dot {
+    @apply h-2.5 w-2.5 shrink-0 rounded-full;
+  }
+
+  .status-dot-healthy,
+  .status-dot-connected,
+  .status-dot-ok {
+    @apply status-dot bg-accent-green;
+  }
+
+  .status-dot-error {
+    @apply status-dot bg-accent-red;
+  }
+
+  .status-dot-unknown {
+    @apply status-dot bg-slate-500;
+  }
+}

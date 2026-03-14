@@ -1,0 +1,74 @@
+# Windows Developer Platform Agent - Configuration
+# Uses pathlib-friendly paths (forward slashes work on Windows)
+
+agent:
+  name: Windows Developer Platform Agent
+  version: 1.0.0
+  system_prompt: |
+    You are a helpful developer platform assistant.
+    You connect Slack, GitHub, Jira, Jenkins, Gmail, and Confluence.
+  max_tokens: 4096
+  temperature: 0.7
+
+ironclaw:
+  url: ${IRONCLAW_URL:-http://localhost:3000}
+  timeout: 30
+  retries: 3
+
+server:
+  host: 127.0.0.1
+  port: 8080
+  workers: 1
+  log_level: info
+  # Windows path for logs (relative to project root)
+  log_dir: logs
+
+database:
+  url: ${DATABASE_URL:-postgresql://claw:claw@localhost:5432/clawagent}
+  # SQLite fallback - Windows path
+  path: data/agent.db
+  echo: false
+  pool_size: 5
+
+integrations:
+  slack:
+    enabled: true
+    signing_secret: ${SLACK_SIGNING_SECRET}
+    bot_token: ${SLACK_BOT_TOKEN}
+    app_token: ${SLACK_APP_TOKEN}
+
+  github:
+    enabled: true
+    token: ${GITHUB_TOKEN}
+    webhook_secret: ${GITHUB_WEBHOOK_SECRET}
+
+  jira:
+    enabled: true
+    url: ${JIRA_URL}
+    user: ${JIRA_USER}
+    api_token: ${JIRA_API_TOKEN}
+    webhook_secret: ${JIRA_WEBHOOK_SECRET}
+
+  confluence:
+    enabled: true
+    url: ${CONFLUENCE_URL}
+    user: ${CONFLUENCE_USER}
+    api_token: ${CONFLUENCE_API_TOKEN}
+
+  jenkins:
+    enabled: true
+    url: ${JENKINS_URL}
+    user: ${JENKINS_USER}
+    api_token: ${JENKINS_API_TOKEN}
+    webhook_secret: ${JENKINS_WEBHOOK_SECRET}
+
+  gmail:
+    enabled: true
+    credentials_file: credentials.json
+    token_file: token.json
+
+workflows:
+  # Workflow definitions directory - pathlib compatible
+  dir: workflows
+  auto_load: true
+  default_timeout: 60

@@ -1,0 +1,17 @@
+.env
+*.db
+__pycache__/
+*.pyc
+logs/*.log
+token.json
+credentials.json
+.venv/
+venv/
+node_modules/
+.next/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+htmlcov/
+.coverage

@@ -1,0 +1,12 @@
+name: pr_opened_workflow
+trigger: github.pull_request.opened
+description: When a PR is opened — summarize it, post to Slack, and link Jira ticket.
+enabled: true
+actions:
+  - tool: github.summarize_pull_request
+  - tool: slack.send_message
+    args:
+      channel: "#dev-notifications"
+    on_failure: continue
+  - tool: jira.link_github_issue
+    on_failure: continue

@@ -1,0 +1,10 @@
+name: jira_created_workflow
+trigger: jira.issue.created
+description: When a Jira ticket is created — mirror to GitHub and notify Slack.
+enabled: true
+actions:
+  - tool: github.create_issue
+  - tool: slack.send_message
+    args:
+      channel: "#dev-team"
+  - tool: jira.update_ticket

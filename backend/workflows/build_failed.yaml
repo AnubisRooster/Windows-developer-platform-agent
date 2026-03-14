@@ -1,0 +1,10 @@
+name: build_failed
+trigger: jenkins.build.failed
+description: Notify channel when Jenkins build fails
+enabled: true
+actions:
+  - tool: slack.send_message
+    args:
+      channel: "#dev-notifications"
+      text: "Build failed: {{ job_name }} #{{ build_number }} — {{ url }}"
+    on_failure: fail
