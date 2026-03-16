@@ -1,6 +1,6 @@
 {
   "provider": "openrouter",
   "model": "openai/gpt-4.1",
-  "openrouter_api_key": "sk-or-v1-testkey1234abcd",
+  "openrouter_api_key": "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",
   "ollama_base_url": "http://localhost:11434"
 }

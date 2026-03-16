@@ -268,6 +268,32 @@ class Embedding(Base):
 
 
 # ---------------------------------------------------------------------------
+# Chat Sessions (long-term memory)
+# ---------------------------------------------------------------------------
+
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(64), unique=True, index=True)
+    title = Column(String(256), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    messages = relationship("ChatMessage", back_populates="session", order_by="ChatMessage.created_at")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(64), ForeignKey("chat_sessions.session_id"), index=True)
+    role = Column(String(16))
+    content = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    session = relationship("ChatSession", back_populates="messages")
+
+
+# ---------------------------------------------------------------------------
 # Database Initialization
 # ---------------------------------------------------------------------------
 

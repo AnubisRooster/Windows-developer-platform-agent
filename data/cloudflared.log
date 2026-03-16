@@ -1,0 +1,83 @@
+2026-03-16T02:36:36Z INF Starting tunnel tunnelID=224638a0-4978-4c3a-b3f2-751d8c8083e0
+2026-03-16T02:36:36Z INF Version 2025.8.1 (Checksum b5d598b00cc3a28cabc5812d9f762819334614bae452db4e7f23eefe7b081556)
+2026-03-16T02:36:36Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2026-03-16T02:36:36Z INF Settings: map[config:C:\Users\atm_m\.cloudflared\config.yml cred-file:C:\Users\atm_m\.cloudflared\224638a0-4978-4c3a-b3f2-751d8c8083e0.json credentials-file:C:\Users\atm_m\.cloudflared\224638a0-4978-4c3a-b3f2-751d8c8083e0.json]
+2026-03-16T02:36:36Z INF cloudflared will not automatically update on Windows systems.
+2026-03-16T02:36:36Z INF Generated Connector ID: 81cd3644-970f-45b2-90d5-3848b2c6a82e
+2026-03-16T02:36:36Z INF Initial protocol quic
+2026-03-16T02:36:36Z INF ICMP proxy will use 192.168.68.65 as source for IPv4
+2026-03-16T02:36:36Z INF ICMP proxy will use fe80::31c8:5e3a:4fdc:a5dd in zone Wi-Fi as source for IPv6
+2026-03-16T02:36:36Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2026-03-16T02:36:36Z INF ICMP proxy will use 192.168.68.65 as source for IPv4
+2026-03-16T02:36:36Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T02:36:36Z INF ICMP proxy will use fe80::31c8:5e3a:4fdc:a5dd in zone Wi-Fi as source for IPv6
+2026-03-16T02:36:36Z INF Starting metrics server on 127.0.0.1:20244/metrics
+2026-03-16T02:36:36Z INF Registered tunnel connection connIndex=0 connection=6a82b315-b972-4353-92e7-574763c37b47 event=0 ip=198.41.192.67 location=atl01 protocol=quic
+2026-03-16T02:36:36Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T02:36:36Z INF Registered tunnel connection connIndex=1 connection=6cc8a5c5-838b-41d2-94ab-86338ee33cd9 event=0 ip=198.41.200.193 location=atl10 protocol=quic
+2026-03-16T02:36:37Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T02:36:37Z INF Registered tunnel connection connIndex=2 connection=a967abf7-4429-4f79-8217-2371389491f0 event=0 ip=198.41.192.27 location=atl06 protocol=quic
+2026-03-16T02:36:38Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T02:36:39Z INF Registered tunnel connection connIndex=3 connection=90252807-edf0-4473-92a7-1d0d7bdfbd93 event=0 ip=198.41.200.73 location=atl10 protocol=quic
+2026-03-16T02:40:21Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T02:40:21Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: Application error 0x0 (remote)" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T02:40:21Z WRN failed to serve tunnel connection error="datagram manager encountered a failure while serving" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T02:40:21Z WRN Serve tunnel error error="datagram manager encountered a failure while serving" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T02:40:21Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T02:40:22Z WRN Connection terminated error="datagram manager encountered a failure while serving" connIndex=2
+2026-03-16T02:40:34Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: Application error 0x0 (remote)" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T02:40:34Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T02:40:34Z WRN failed to serve tunnel connection error="accept stream listener encountered a failure while serving" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T02:40:34Z WRN Serve tunnel error error="accept stream listener encountered a failure while serving" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T02:40:34Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T02:40:35Z WRN Connection terminated error="accept stream listener encountered a failure while serving" connIndex=3
+2026-03-16T02:40:40Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T02:40:40Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T02:40:41Z INF Registered tunnel connection connIndex=2 connection=70ef5ee5-7af0-4abd-8de9-45a2f87e063f event=0 ip=198.41.192.27 location=atl06 protocol=quic
+2026-03-16T02:40:41Z INF Registered tunnel connection connIndex=3 connection=13386c3a-b4c7-42f1-90c8-7f06fdd5d27b event=0 ip=198.41.200.73 location=atl10 protocol=quic
+2026-03-16T02:40:44Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T02:40:44Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: Application error 0x0 (remote)" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T02:40:44Z WRN failed to serve tunnel connection error="datagram manager encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T02:40:44Z WRN Serve tunnel error error="datagram manager encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T02:40:44Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T02:40:45Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T02:40:46Z INF Registered tunnel connection connIndex=0 connection=dc0c926c-2412-430a-a518-e203bb9d938d event=0 ip=198.41.192.67 location=atl01 protocol=quic
+2026-03-16T02:40:47Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T02:40:47Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: Application error 0x0 (remote)" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T02:40:47Z WRN failed to serve tunnel connection error="datagram manager encountered a failure while serving" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T02:40:47Z WRN Serve tunnel error error="datagram manager encountered a failure while serving" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T02:40:47Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T02:40:49Z WRN Connection terminated error="datagram manager encountered a failure while serving" connIndex=1
+2026-03-16T02:41:13Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T02:41:14Z INF Registered tunnel connection connIndex=1 connection=1e25355f-b282-4002-8917-5ee2fded046c event=0 ip=198.41.200.193 location=atl10 protocol=quic
+2026-03-16T10:14:05Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: timeout: no recent network activity" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T10:14:05Z ERR failed to run the datagram handler error="timeout: no recent network activity" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T10:14:05Z ERR failed to run the datagram handler error="timeout: no recent network activity" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T10:14:05Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: timeout: no recent network activity" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T10:14:05Z WRN failed to serve tunnel connection error="datagram manager encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T10:14:05Z WRN failed to serve tunnel connection error="accept stream listener encountered a failure while serving" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T10:14:05Z WRN Serve tunnel error error="datagram manager encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T10:14:05Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T10:14:05Z WRN Serve tunnel error error="accept stream listener encountered a failure while serving" connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T10:14:05Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T10:14:05Z ERR failed to run the datagram handler error="timeout: no recent network activity" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T10:14:05Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: timeout: no recent network activity" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T10:14:05Z WRN failed to serve tunnel connection error="datagram manager encountered a failure while serving" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T10:14:05Z WRN Serve tunnel error error="datagram manager encountered a failure while serving" connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T10:14:05Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T10:14:05Z WRN Connection terminated error="accept stream listener encountered a failure while serving" connIndex=3
+2026-03-16T10:14:06Z WRN Connection terminated error="datagram manager encountered a failure while serving" connIndex=2
+2026-03-16T10:14:06Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: timeout: no recent network activity" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T10:14:06Z ERR failed to run the datagram handler error="timeout: no recent network activity" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T10:14:06Z ERR failed to serve tunnel connection error="accept stream listener encountered a failure while serving" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T10:14:06Z ERR Serve tunnel error error="accept stream listener encountered a failure while serving" connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T10:14:06Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T10:14:06Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.67
+2026-03-16T10:14:06Z INF Registered tunnel connection connIndex=0 connection=5514eafc-7e9b-4ba4-8870-1712e499e47b event=0 ip=198.41.192.67 location=atl01 protocol=quic
+2026-03-16T10:14:07Z WRN Connection terminated error="accept stream listener encountered a failure while serving" connIndex=1
+2026-03-16T10:14:19Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.193
+2026-03-16T10:14:19Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.73
+2026-03-16T10:14:19Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.27
+2026-03-16T10:14:19Z INF Registered tunnel connection connIndex=3 connection=ce124b29-5ade-428e-87a4-31fb0dc73123 event=0 ip=198.41.200.73 location=atl10 protocol=quic
+2026-03-16T10:14:19Z INF Registered tunnel connection connIndex=2 connection=6bccef0d-632d-4c14-aead-27306ebb5dab event=0 ip=198.41.192.27 location=atl06 protocol=quic
+2026-03-16T10:14:20Z INF Registered tunnel connection connIndex=1 connection=37b1259d-e1f3-4366-b2aa-10a79e0a217e event=0 ip=198.41.200.193 location=atl10 protocol=quic

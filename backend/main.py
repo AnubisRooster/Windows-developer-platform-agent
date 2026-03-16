@@ -11,9 +11,14 @@ Commands:
 from __future__ import annotations
 
 import asyncio
+import atexit
 import logging
 import os
+import shutil
+import signal
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 import click
@@ -21,6 +26,14 @@ import uvicorn
 
 _BACKEND_DIR = Path(__file__).resolve().parent
 _PROJECT_ROOT = _BACKEND_DIR.parent
+
+_env_path = _PROJECT_ROOT / ".env"
+if _env_path.exists():
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(_env_path, override=False)
+    except ImportError:
+        pass
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
@@ -214,6 +227,151 @@ def _register_knowledge_tools(registry: ToolRegistry, knowledge_tools: Knowledge
             registry.register(name, lambda **kwargs: asyncio.get_event_loop().run_until_complete(knowledge_tools.explain_system(**kwargs)), schema)
 
 
+# ---------------------------------------------------------------------------
+# Child process management (IronClaw + Cloudflare Tunnel)
+# ---------------------------------------------------------------------------
+
+_child_procs: dict[str, subprocess.Popen] = {}
+
+
+def _stop_child(name: str) -> None:
+    proc = _child_procs.pop(name, None)
+    if proc is None or proc.poll() is not None:
+        return
+    logger.info("Stopping %s (pid %s) ...", name, proc.pid)
+    try:
+        proc.terminate()
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=3)
+    except Exception as e:
+        logger.debug("Error stopping %s: %s", name, e)
+
+
+def _stop_all_children() -> None:
+    for name in list(_child_procs):
+        _stop_child(name)
+
+
+def _start_ironclaw(timeout: float = 15.0) -> subprocess.Popen | None:
+    """Launch IronClaw as a child process and wait until its health endpoint responds."""
+    exe = shutil.which("ironclaw")
+    if not exe:
+        logger.warning("ironclaw executable not found on PATH — running without IronClaw (OpenRouter fallback)")
+        return None
+
+    ironclaw_url = os.environ.get("IRONCLAW_URL", "http://127.0.0.1:3000").rstrip("/")
+
+    import httpx
+    try:
+        resp = httpx.get(f"{ironclaw_url}/api/health", timeout=2.0)
+        if resp.status_code == 200:
+            logger.info("IronClaw already running at %s", ironclaw_url)
+            return None
+    except Exception:
+        pass
+
+    ironclaw_log = _PROJECT_ROOT / "data" / "ironclaw.log"
+    ironclaw_log.parent.mkdir(parents=True, exist_ok=True)
+    ic_log_fh = open(ironclaw_log, "a", encoding="utf-8")
+
+    logger.info("Starting IronClaw (%s) ...", exe)
+    logger.info("IronClaw logs → %s", ironclaw_log)
+    proc = subprocess.Popen(
+        [exe, "run", "--no-onboard"],
+        stdout=ic_log_fh,
+        stderr=subprocess.STDOUT,
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
+    )
+    _child_procs["ironclaw"] = proc
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            ic_log_fh.close()
+            tail = ironclaw_log.read_text(encoding="utf-8", errors="replace")[-500:]
+            logger.error("IronClaw exited early (code %s): %s", proc.returncode, tail)
+            _child_procs.pop("ironclaw", None)
+            return None
+        try:
+            resp = httpx.get(f"{ironclaw_url}/api/health", timeout=2.0)
+            if resp.status_code == 200:
+                logger.info("IronClaw healthy at %s (pid %s)", ironclaw_url, proc.pid)
+                return proc
+        except Exception:
+            pass
+        time.sleep(0.5)
+
+    logger.warning("IronClaw did not become healthy within %.0fs — continuing with OpenRouter fallback", timeout)
+    return proc
+
+
+def _start_cloudflared(backend_port: int) -> subprocess.Popen | None:
+    """Launch cloudflared tunnel as a child process.
+
+    The tunnel connects to Cloudflare edge immediately and will forward
+    traffic to localhost once uvicorn starts listening.  We don't block
+    on a health check here because the backend isn't up yet.
+    """
+    exe = shutil.which("cloudflared")
+    if not exe:
+        logger.warning("cloudflared not found on PATH — webhook tunnel disabled")
+        return None
+
+    webhook_base = os.environ.get("WEBHOOK_BASE_URL", "").strip()
+    if not webhook_base:
+        logger.info("WEBHOOK_BASE_URL not set — skipping Cloudflare Tunnel")
+        return None
+
+    config_path = Path.home() / ".cloudflared" / "config.yml"
+    if config_path.exists():
+        cmd = [exe, "tunnel", "--config", str(config_path), "run"]
+        tunnel_mode = f"named tunnel → {webhook_base}"
+    else:
+        cmd = [exe, "tunnel", "--url", f"http://localhost:{backend_port}"]
+        tunnel_mode = f"quick tunnel → localhost:{backend_port}"
+
+    # If the tunnel is already reachable (e.g. running as a Windows service), skip
+    import httpx
+    try:
+        resp = httpx.get(f"{webhook_base}/health", timeout=3.0)
+        if resp.status_code == 200:
+            logger.info("Cloudflare Tunnel already serving %s", webhook_base)
+            return None
+    except Exception:
+        pass
+
+    tunnel_log = _PROJECT_ROOT / "data" / "cloudflared.log"
+    tunnel_log.parent.mkdir(parents=True, exist_ok=True)
+    log_fh = open(tunnel_log, "a", encoding="utf-8")
+
+    logger.info("Starting Cloudflare Tunnel (%s) ...", tunnel_mode)
+    logger.info("Tunnel logs → %s", tunnel_log)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=log_fh,
+        stderr=subprocess.STDOUT,
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
+    )
+    _child_procs["cloudflared"] = proc
+
+    time.sleep(2)
+    if proc.poll() is not None:
+        log_fh.close()
+        tail = tunnel_log.read_text(encoding="utf-8", errors="replace")[-500:]
+        logger.error("cloudflared exited immediately (code %s): %s", proc.returncode, tail)
+        _child_procs.pop("cloudflared", None)
+        return None
+
+    logger.info("Cloudflare Tunnel started (pid %s) — %s will be live once backend is ready", proc.pid, webhook_base)
+    return proc
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
 @click.group()
 def cli() -> None:
     """Developer AI Platform - Backend CLI."""
@@ -224,10 +382,17 @@ def cli() -> None:
 @click.option("--host", "-h", default="127.0.0.1", help="Server host")
 @click.option("--port", "-p", default=8080, type=int, help="Server port")
 @click.option("--reload", is_flag=True, help="Auto-reload on changes")
-def run(host: str, port: int, reload: bool) -> None:
-    """Full platform: IronClaw + workflows + event bus + knowledge + webhooks."""
+@click.option("--no-ironclaw", is_flag=True, help="Skip starting IronClaw (use OpenRouter only)")
+@click.option("--no-tunnel", is_flag=True, help="Skip starting Cloudflare Tunnel")
+def run(host: str, port: int, reload: bool, no_ironclaw: bool, no_tunnel: bool) -> None:
+    """Full platform: IronClaw + Cloudflare Tunnel + workflows + event bus + knowledge + webhooks."""
     host = os.environ.get("WEBHOOK_HOST", host)
     port = int(os.environ.get("WEBHOOK_PORT", str(port)))
+
+    atexit.register(_stop_all_children)
+
+    if not no_ironclaw:
+        _start_ironclaw()
 
     init_db()
     ironclaw = _build_ironclaw()
@@ -258,7 +423,17 @@ def run(host: str, port: int, reload: bool) -> None:
 
     logger.info("Starting Developer AI Platform at http://%s:%s", host, port)
     logger.info("Registered %d tools, %d workflows", len(registry.list_tools()), len(workflow_engine._workflows))
-    uvicorn.run(app, host=host, port=port, reload=reload)
+
+    if not no_tunnel:
+        _start_cloudflared(port)
+
+    webhook_base = os.environ.get("WEBHOOK_BASE_URL", "")
+    if webhook_base:
+        logger.info("Webhook tunnel: %s", webhook_base)
+    try:
+        uvicorn.run(app, host=host, port=port, reload=reload)
+    finally:
+        _stop_all_children()
 
 
 @cli.command("webhook-server")
