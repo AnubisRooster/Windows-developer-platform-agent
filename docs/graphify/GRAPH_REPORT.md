@@ -1,7 +1,7 @@
-# Graph Report - Windows-developer-platform-agent  (2026-09-06)
+# Graph Report - Windows-developer-platform-agent  (2026-09-07)
 
 ## Corpus Check
-- 157 files · ~58,870 words
+- 158 files · ~264,308 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
