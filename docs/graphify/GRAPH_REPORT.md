@@ -1,12 +1,12 @@
-# Graph Report - Windows-developer-platform-agent  (2026-09-21)
+# Graph Report - Windows-developer-platform-agent  (2026-09-28)
 
 ## Corpus Check
-- 158 files · ~274,652 words
+- 158 files · ~290,806 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 12 file(s) not represented in the graph (top: (none) 4, .example 2, .log 1)
 
 ## Summary
-- 1683 nodes · 3186 edges · 125 communities (83 shown, 42 thin omitted)
+- 1683 nodes · 3198 edges · 124 communities (82 shown, 42 thin omitted)
 - Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 195 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
@@ -21,8 +21,8 @@
 - EmbeddingStore
 - backend/main.py
 - get_session()
-- test_platform_e2e.py
 - test_backend_orchestrator.py
+- test_platform_e2e.py
 - ToolRegistry
 - WorkflowEngine
 - ToolRegistry
@@ -41,23 +41,25 @@
 - AgentEvent
 - TestEnvironment
 - integrations/gmail.py
+- app/page.tsx
+- integrations/slack.py
 - test_knowledge_tools.py
 - Planner
+- test_integrations_mock.py
 - github_integration.py
 - compilerOptions
-- test_integrations_mock.py
+- integrations/jira_integration.py
 - agent/orchestrator.py
-- api.ts
-- fetchApi()
 - TestChatSend
-- integrations/confluence.py
 - KnowledgeTools
 - _log_event()
 - markets/page.tsx
+- integrations/jenkins.py
 - test_event_gateway.py
 - TestEventBusFallback
 - WorkflowEngine
-- integrations/jira_integration.py
+- api.ts
+- feeds/page.tsx
 - LLMClient
 - EventBus
 - test_chat_api.py
@@ -70,24 +72,20 @@
 - ToolOutput
 - backend/integrations/confluence.py
 - backend/integrations/jenkins.py
-- app/page.tsx
-- integrations/slack.py
+- fetchApi()
 - TestWindowsPaths
 - backend/integrations/slack.py
 - test_service_health.py
 - graphify_pipeline.py
 - _cosine_similarity()
-- chat/page.tsx
-- patch
 - api_model_config_post()
 - WorkflowEngine
 - SlackCommandGateway
+- react
 - TestModelConfigAPI
 - TestToolRegistry
 - create_app()
 - LLMClient
-- react
-- ModelSelector.tsx
 - package.json
 - TestMarketsEndpoint
 - full_app()
@@ -95,6 +93,7 @@
 - logs/page.tsx
 - workflow-runs/page.tsx
 - TestConversationMemory
+- .get_messages()
 - GitHubClient
 - JiraClient
 - TestDashboardReadsWebhookData
@@ -153,7 +152,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (125 total, 42 thin omitted)
+## Communities (124 total, 42 thin omitted)
 
 ### Community 0 - "load_workflow()"
 Cohesion: 0.06
@@ -177,7 +176,7 @@ Nodes (30): LLM client supporting OpenRouter, OpenAI, and Ollama. Platform-agnos
 
 ### Community 5 - "frontend/package.json"
 Cohesion: 0.05
-Nodes (36): dependencies, next, react, react-dom, recharts, devDependencies, autoprefixer, postcss (+28 more)
+Nodes (37): dependencies, next, react, react-dom, recharts, devDependencies, autoprefixer, postcss (+29 more)
 
 ### Community 6 - "webhooks/server.py"
 Cohesion: 0.08
@@ -195,13 +194,13 @@ Nodes (35): asyncio, atexit, Event Bus with Redis backing and in-memory fallback
 Cohesion: 0.09
 Nodes (19): CachedSummary, get_session(), Session, Get a new database session., Record of a workflow execution., Cached summary (e.g. PR summary, page summary)., Persisted tool output from Orchestrator (DB model; avoids conflict with…, ToolOutputModel (+11 more)
 
-### Community 10 - "test_platform_e2e.py"
-Cohesion: 0.10
-Nodes (21): ConversationMemory, Any, ConversationMemory - Backend conversation persistence via SQLAlchemy. Stores…, Persists and retrieves conversation messages from the database., Persist a conversation message., Retrieve recent messages for a conversation., Get messages in format suitable for LLM chat API., Orchestrator (+13 more)
-
-### Community 11 - "test_backend_orchestrator.py"
+### Community 10 - "test_backend_orchestrator.py"
 Cohesion: 0.09
 Nodes (22): Register knowledge query tools in the capability registry., _register_knowledge_tools(), Any, Tool registry for the backend orchestrator. Registers tools with JSON Schema…, JSON Schema for a tool's parameters., Convert to OpenAPI/JSON Schema format for tool calls., Registered tool with handler and schema., Registry of tools available to the orchestrator. (+14 more)
+
+### Community 11 - "test_platform_e2e.py"
+Cohesion: 0.12
+Nodes (18): ConversationMemory, ConversationMemory - Backend conversation persistence via SQLAlchemy. Stores…, Persists and retrieves conversation messages from the database., Persist a conversation message., Orchestrator, Any, Backend Orchestrator - Coordinates IronClaw/LLM and tools, persists…, Execute a registered tool and return its result. (+10 more)
 
 ### Community 12 - "ToolRegistry"
 Cohesion: 0.11
@@ -220,7 +219,7 @@ Cohesion: 0.12
 Nodes (18): Event, init_db(), Standardized event from any webhook or internal source., Workflow execution records., WorkflowRun, index(), Run repository intelligence indexers., sys (+10 more)
 
 ### Community 16 - "database/models.py"
-Cohesion: 0.11
+Cohesion: 0.10
 Nodes (18): ChatSession, Event, _get_data_dir(), get_engine(), Path, SQLAlchemy models and database utilities. Uses pathlib for paths; DATABASE_URL…, Get SQLAlchemy engine from DATABASE_URL or SQLite fallback., Persisted event from EventBus. (+10 more)
 
 ### Community 17 - "test_orchestrator_pipeline.py"
@@ -275,45 +274,45 @@ Nodes (6): importlib, platform, deployment, Deployment tests: verify environment
 Cohesion: 0.13
 Nodes (18): base64, google_auth_oauthlib_flow, google_auth_transport_requests, google_oauth2_credentials, googleapiclient_discovery, googleapiclient_errors, extract_action_items(), _get_service() (+10 more)
 
-### Community 30 - "test_knowledge_tools.py"
+### Community 30 - "app/page.tsx"
+Cohesion: 0.16
+Nodes (16): integrationNames, StatusPage(), StatusValue, toStatus(), ModelSelector(), PROVIDERS, Status, StatusCard() (+8 more)
+
+### Community 31 - "integrations/slack.py"
+Cohesion: 0.15
+Nodes (15): _get_client(), Any, Slack integration using slack_sdk. Platform-agnostic., Get Slack WebClient from env token., Send a message to a Slack channel. Args: channel: Channel ID or name (e.g.…, Read recent messages from a Slack channel. Args: channel: Channel ID or name.…, Respond to a Slack slash command via response_url. Args: response_url: URL…, read_channel_history() (+7 more)
+
+### Community 32 - "test_knowledge_tools.py"
 Cohesion: 0.12
 Nodes (10): asyncio, fixture, Unit tests for KnowledgeTools (query tools for IronClaw)., _sqlite_in_memory(), TestExplainSystem, TestFindRelatedDocs, TestFindRepo, TestSearch (+2 more)
 
-### Community 31 - "Planner"
+### Community 33 - "Planner"
 Cohesion: 0.15
 Nodes (11): Planner, Creates action plans by asking LLM to decompose goals into tool steps., Rich console chat loop - start_chat(orchestrator) with pretty printing, command…, Start interactive chat loop with Rich console. Commands: /quit - Exit /clear -…, start_chat(), readline, rich_console, rich_markdown (+3 more)
 
-### Community 32 - "github_integration.py"
+### Community 34 - "test_integrations_mock.py"
+Cohesion: 0.16
+Nodes (14): atlassian, Confluence, create_page(), _get_client(), Any, Confluence integration using atlassian-python-api. Platform-agnostic., Get Confluence client from env., Search Confluence for documents matching query. Args: query: Search query… (+6 more)
+
+### Community 35 - "github_integration.py"
 Cohesion: 0.19
 Nodes (17): _api(), comment_on_pr(), create_branch(), create_issue(), get_repo_activity(), _get_token(), Any, GitHub integration - create_issue, summarize_pull_request, comment_on_pr,… (+9 more)
 
-### Community 33 - "compilerOptions"
+### Community 36 - "compilerOptions"
 Cohesion: 0.11
 Nodes (17): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+9 more)
 
-### Community 34 - "test_integrations_mock.py"
-Cohesion: 0.18
-Nodes (13): fetch_build_logs(), get_build_status(), _get_client(), Any, Jenkins integration using python-jenkins. Platform-agnostic., Get Jenkins client from env., Trigger a Jenkins build. Args: job_name: Full job name (may include folder…, Get status of a Jenkins build. Args: job_name: Full job name. build_number:… (+5 more)
+### Community 37 - "integrations/jira_integration.py"
+Cohesion: 0.16
+Nodes (15): create_ticket(), _get_client(), get_ticket_details(), link_github_issue(), Any, Jira integration using jira library. Platform-agnostic., Get Jira client from env., Create a Jira ticket. Args: project: Project key (e.g. PROJ). summary: Ticket… (+7 more)
 
-### Community 35 - "agent/orchestrator.py"
+### Community 38 - "agent/orchestrator.py"
 Cohesion: 0.15
 Nodes (9): Orchestrator - coordinates LLM and tools for agent workflows. Supports…, Planner - decomposes goals into tool steps via LLM., Workflow engine - runs event-driven workflows. Uses pathlib.Path for all file…, dataclasses, json, re, Unit tests for LLMClient, Orchestrator, ToolOutput, TOOL_CALL_PATTERN., TestToolCallPattern (+1 more)
 
-### Community 36 - "api.ts"
-Cohesion: 0.19
-Nodes (13): EventsPage(), payloadPreview(), ToolsPage(), WorkflowsPage(), Event, fetchEvents(), fetchTools(), fetchWorkflows() (+5 more)
-
-### Community 37 - "fetchApi()"
-Cohesion: 0.17
-Nodes (12): FeedsPage(), Tab, EmailMessage, FeedPost, FeedResponse, fetchApi(), fetchIntegrationsConfig(), fetchLinkedInFeed() (+4 more)
-
-### Community 38 - "TestChatSend"
+### Community 39 - "TestChatSend"
 Cohesion: 0.15
 Nodes (5): patch, Each send should include all prior messages in that session's context., A new chat session should NOT include messages from a previous session., TestChatDelete, TestChatSend
-
-### Community 39 - "integrations/confluence.py"
-Cohesion: 0.17
-Nodes (13): atlassian, Confluence, create_page(), _get_client(), Any, Confluence integration using atlassian-python-api. Platform-agnostic., Get Confluence client from env., Search Confluence for documents matching query. Args: query: Search query… (+5 more)
 
 ### Community 40 - "KnowledgeTools"
 Cohesion: 0.17
@@ -324,120 +323,120 @@ Cohesion: 0.23
 Nodes (16): Verify webhook signature (HMAC-SHA256). - GitHub: X-Hub-Signature-256…, verify_webhook_signature(), github_webhook(), gmail_webhook(), health(), jenkins_webhook(), jira_webhook(), slack_webhook() (+8 more)
 
 ### Community 42 - "markets/page.tsx"
-Cohesion: 0.18
+Cohesion: 0.21
 Nodes (14): ASSET_ORDER, ChartTooltip(), formatLargeNumber(), formatPrice(), MarketsPage(), PriceCard(), PriceChart(), PriceChartProps (+6 more)
 
-### Community 43 - "test_event_gateway.py"
+### Community 43 - "integrations/jenkins.py"
+Cohesion: 0.18
+Nodes (12): fetch_build_logs(), get_build_status(), _get_client(), Any, Jenkins integration using python-jenkins. Platform-agnostic., Get Jenkins client from env., Trigger a Jenkins build. Args: job_name: Full job name (may include folder…, Get status of a Jenkins build. Args: job_name: Full job name. build_number:… (+4 more)
+
+### Community 44 - "test_event_gateway.py"
 Cohesion: 0.13
 Nodes (9): client(), fixture, Unit tests for the Event Gateway (webhook server)., _sqlite_in_memory(), TestGmailWebhook, TestHealthEndpoint, TestJenkinsWebhook, TestJiraWebhook (+1 more)
 
-### Community 44 - "TestEventBusFallback"
+### Community 45 - "TestEventBusFallback"
 Cohesion: 0.17
 Nodes (4): asyncio, Test in-memory fallback when Redis is unavailable., TestEventBusFallback, handler()
 
-### Community 45 - "WorkflowEngine"
+### Community 46 - "WorkflowEngine"
 Cohesion: 0.17
 Nodes (7): Path, Executes YAML-defined workflows triggered by events., WorkflowEngine, asyncio, TestWorkflowTriggerPipeline, asyncio, TestWorkflowEngine
 
-### Community 46 - "integrations/jira_integration.py"
-Cohesion: 0.20
-Nodes (14): create_ticket(), _get_client(), get_ticket_details(), link_github_issue(), Any, Jira integration using jira library. Platform-agnostic., Get Jira client from env., Create a Jira ticket. Args: project: Project key (e.g. PROJ). summary: Ticket… (+6 more)
+### Community 47 - "api.ts"
+Cohesion: 0.22
+Nodes (12): ConversationsPage(), MessageBubble(), EventsPage(), payloadPreview(), Conversation, Event, fetchConversations(), fetchEvents() (+4 more)
 
-### Community 47 - "LLMClient"
+### Community 48 - "feeds/page.tsx"
+Cohesion: 0.21
+Nodes (14): EmailRow(), FeedsPage(), LinkedInPost(), NotConfigured(), Tab, XPost(), EmailMessage, FeedPost (+6 more)
+
+### Community 49 - "LLMClient"
 Cohesion: 0.23
 Nodes (5): LLMClient, Unified LLM client for OpenRouter, OpenAI, and Ollama., Send chat completion request and return assistant message content. Args:…, patch, TestLLMClient
 
-### Community 48 - "EventBus"
+### Community 50 - "EventBus"
 Cohesion: 0.18
 Nodes (9): EventBus, Pub/sub event bus with topic wildcards (e.g. github.*, *.opened). Handlers can…, Subscribe to a topic. Supports glob patterns: github.*, *.opened,…, Publish event to all matching subscribers and persist. Args: event: The event…, Check if topic matches pattern (supports * wildcard)., main(), Claw Agent launcher - entry point for packaged executable. Sets up data paths…, Configure environment for packaged or portable run. (+1 more)
 
-### Community 49 - "test_chat_api.py"
+### Community 51 - "test_chat_api.py"
 Cohesion: 0.15
 Nodes (7): client(), fixture, Integration tests for the Chat API endpoints., TestChatMessages, TestChatNewSession, TestChatSessions, _wire_event_bus()
 
-### Community 50 - "asyncio"
+### Community 52 - "asyncio"
 Cohesion: 0.18
 Nodes (6): asyncio, TestHealth, TestInterpret, TestPlan, TestSelectTools, TestSummarize
 
-### Community 51 - "test_planner.py"
+### Community 53 - "test_planner.py"
 Cohesion: 0.26
 Nodes (8): ActionPlan, PlanStep, Single step in an action plan., Plan with goal and ordered steps., Ask LLM to decompose goal into tool steps. Parse JSON response into ActionPlan.…, Unit tests for Planner, PlanStep, ActionPlan., TestActionPlan, TestPlanStep
 
-### Community 52 - "backend/workflows/engine.py"
+### Community 54 - "backend/workflows/engine.py"
 Cohesion: 0.27
 Nodes (10): AgentLog, Structured agent logs for all events, workflows, and decisions., _get_nested(), _log_to_db(), Any, WorkflowEngine - Loads YAML workflows, subscribes to EventBus triggers,…, _render_template(), repl() (+2 more)
 
-### Community 53 - "backend/integrations/gmail.py"
+### Community 55 - "backend/integrations/gmail.py"
 Cohesion: 0.24
 Nodes (12): _get_credentials_path(), _get_service(), _get_token_path(), Any, Path, Gmail integration - read_emails, summarize_thread, send_email,…, Get Gmail API service (lazy import)., Read emails matching query. (+4 more)
 
-### Community 54 - "backend/integrations/jira_integration.py"
+### Community 56 - "backend/integrations/jira_integration.py"
 Cohesion: 0.28
 Nodes (12): _api(), create_ticket(), _get_config(), get_ticket_details(), link_github_issue(), Any, Jira integration - create_ticket, update_ticket, link_github_issue,…, Create a Jira ticket. (+4 more)
 
-### Community 55 - "asyncio"
+### Community 57 - "asyncio"
 Cohesion: 0.22
 Nodes (4): asyncio, TestOrchestratorExecuteTool, TestOrchestratorHandleMessage, TestOrchestratorMemory
 
-### Community 56 - "ToolOutput"
+### Community 58 - "ToolOutput"
 Cohesion: 0.20
 Nodes (7): Any, Register a tool by name with its handler and optional description., Get the handler for a tool by name., Process user message: send to LLM, parse TOOL_CALL blocks, execute tools,…, Result of a tool execution., ToolOutput, TestToolOutput
 
-### Community 57 - "backend/integrations/confluence.py"
+### Community 59 - "backend/integrations/confluence.py"
 Cohesion: 0.26
 Nodes (11): _api(), create_page(), _get_config(), Any, Confluence integration - search_docs, summarize_page, create_page., Call Confluence REST API., Search Confluence using CQL., Fetch a page and return a text summary (title + body excerpt). (+3 more)
 
-### Community 58 - "backend/integrations/jenkins.py"
+### Community 60 - "backend/integrations/jenkins.py"
 Cohesion: 0.26
 Nodes (11): _api(), fetch_build_logs(), get_build_status(), _get_config(), Any, Jenkins integration - trigger_build, get_build_status, fetch_build_logs., Call Jenkins API (crumb may be required)., Trigger a Jenkins build. Returns build queue info. (+3 more)
 
-### Community 59 - "app/page.tsx"
-Cohesion: 0.23
-Nodes (10): integrationNames, StatusPage(), StatusValue, toStatus(), Status, StatusCard(), StatusCardProps, statusDotClass() (+2 more)
+### Community 61 - "fetchApi()"
+Cohesion: 0.32
+Nodes (11): ChatPage(), MessageBubble(), ChatMessageItem, ChatSessionSummary, createChatSession(), deleteChatSession(), fetchApi(), fetchChatMessages() (+3 more)
 
-### Community 60 - "integrations/slack.py"
-Cohesion: 0.18
-Nodes (11): _get_client(), Any, Slack integration using slack_sdk. Platform-agnostic., Get Slack WebClient from env token., Read recent messages from a Slack channel. Args: channel: Channel ID or name.…, Respond to a Slack slash command via response_url. Args: response_url: URL…, read_channel_history(), respond_to_command() (+3 more)
-
-### Community 61 - "TestWindowsPaths"
+### Community 62 - "TestWindowsPaths"
 Cohesion: 0.17
 Nodes (6): deployment, Scan all .py files for hardcoded /usr, /home, /tmp, ~/. paths., Verify key modules use pathlib.Path instead of os.path.join., Verify the database module can create data directories on Windows., Verify workflow directory glob works on Windows., TestWindowsPaths
 
-### Community 62 - "backend/integrations/slack.py"
+### Community 63 - "backend/integrations/slack.py"
 Cohesion: 0.27
 Nodes (10): _api(), _get_token(), Any, Slack integration - send_message, read_channel_history, respond_to_command., Send a message to a channel (optionally in a thread)., Read recent messages from a channel., Respond to a Slack slash command using the response_url., read_channel_history() (+2 more)
 
-### Community 63 - "test_service_health.py"
+### Community 64 - "test_service_health.py"
 Cohesion: 0.18
 Nodes (5): fastapi_testclient, deployment, fixture, Deployment tests: verify services can start and respond to health checks., TestServiceHealth
 
-### Community 64 - "graphify_pipeline.py"
+### Community 65 - "graphify_pipeline.py"
 Cohesion: 0.18
 Nodes (9): graphify_analyze, graphify_build, graphify_cluster, graphify_detect, graphify_export, graphify_extract, graphify_llm, graphify_report (+1 more)
 
-### Community 65 - "_cosine_similarity()"
+### Community 66 - "_cosine_similarity()"
 Cohesion: 0.27
 Nodes (5): _cosine_similarity(), Any, Semantic search across all indexed documents. Returns ranked results with…, Compute cosine similarity between two vectors., TestCosineSimilarity
 
-### Community 66 - "chat/page.tsx"
-Cohesion: 0.31
-Nodes (8): ChatPage(), ChatMessageItem, ChatSessionSummary, createChatSession(), deleteChatSession(), fetchChatMessages(), fetchChatSessions(), sendChatMessage()
-
-### Community 67 - "patch"
-Cohesion: 0.29
-Nodes (5): Send a message to a Slack channel. Args: channel: Channel ID or name (e.g.…, send_message(), patch, TestJiraIntegration, TestSlackIntegration
-
-### Community 68 - "api_model_config_post()"
+### Community 67 - "api_model_config_post()"
 Cohesion: 0.24
 Nodes (10): api_model_config_post(), _get_dashboard_dir(), _get_data_dir(), _get_model_config_path(), _llm_chat(), _load_model_config(), Path, Dashboard static files (Next.js export). Set CLAW_DASHBOARD_DIR or uses… (+2 more)
 
-### Community 69 - "WorkflowEngine"
+### Community 68 - "WorkflowEngine"
 Cohesion: 0.28
 Nodes (6): Any, Path, Executes workflows from YAML/JSON definitions., Load workflow definition by name., Run a workflow with the given event., WorkflowEngine
 
-### Community 70 - "SlackCommandGateway"
+### Community 69 - "SlackCommandGateway"
 Cohesion: 0.25
 Nodes (5): Any, Handles Slack app_mention events and routes to orchestrator., Register app_mention handler on the Slack Bolt app. Expects app to have…, Process a message and return the response. Used when the gateway is called…, SlackCommandGateway
+
+### Community 70 - "react"
+Cohesion: 0.28
+Nodes (7): ToolsPage(), WorkflowsPage(), fetchTools(), fetchWorkflows(), Tool, Workflow, react
 
 ### Community 73 - "create_app()"
 Cohesion: 0.25
@@ -447,59 +446,55 @@ Nodes (3): create_app(), Any, Create FastAPI webhook application.
 Cohesion: 0.33
 Nodes (4): LLMClient, Any, Unified LLM client for OpenRouter, OpenAI, and Ollama., Send chat completion request and return assistant message content.
 
-### Community 75 - "react"
-Cohesion: 0.33
-Nodes (5): ConversationsPage(), Conversation, fetchConversations(), Message, react
-
-### Community 76 - "ModelSelector.tsx"
-Cohesion: 0.38
-Nodes (6): ModelSelector(), PROVIDERS, AvailableModel, fetchModelConfig(), ModelConfig, updateModelConfig()
-
-### Community 77 - "package.json"
+### Community 75 - "package.json"
 Cohesion: 0.29
 Nodes (6): description, name, private, scripts, start, version
 
-### Community 79 - "full_app()"
+### Community 77 - "full_app()"
 Cohesion: 0.29
 Nodes (6): client(), full_app(), fixture, Create app with event bus and workflow engine wired up., Minimal app, no orchestrator., _sqlite_in_memory()
 
-### Community 81 - "logs/page.tsx"
+### Community 79 - "logs/page.tsx"
 Cohesion: 0.47
 Nodes (5): LevelFilter, logLineColor(), LogsPage(), fetchLogs(), LogEntry
 
-### Community 82 - "workflow-runs/page.tsx"
+### Community 80 - "workflow-runs/page.tsx"
 Cohesion: 0.53
 Nodes (5): formatDuration(), statusBadge(), WorkflowRunsPage(), fetchWorkflowRuns(), WorkflowRun
 
-### Community 84 - "GitHubClient"
+### Community 82 - ".get_messages()"
+Cohesion: 0.40
+Nodes (3): Any, Retrieve recent messages for a conversation., Get messages in format suitable for LLM chat API.
+
+### Community 83 - "GitHubClient"
 Cohesion: 0.40
 Nodes (3): GitHubClient, GitHub client integration., GitHub API client wrapper.
 
-### Community 85 - "JiraClient"
+### Community 84 - "JiraClient"
 Cohesion: 0.40
 Nodes (3): JiraClient, Jira client integration., Jira API client wrapper.
 
-### Community 88 - "agent/tools.py"
+### Community 87 - "agent/tools.py"
 Cohesion: 0.50
 Nodes (3): Agent tools - summarization and helpers., Summarize text content., summarize()
 
-### Community 89 - "_register_tools()"
+### Community 88 - "_register_tools()"
 Cohesion: 0.50
 Nodes (4): extract_action_items(), Extract action items from email/thread text (simple heuristic)., Register all integration tools and knowledge tools., _register_tools()
 
 ## Knowledge Gaps
 - **62 isolated node(s):** `nextConfig`, `name`, `version`, `private`, `dev` (+57 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 715 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges. (Counts symbols only; 708 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **42 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `EventBus` connect `EventBus` to `conftest.py`, `backend/main.py`, `test_platform_e2e.py`, `WorkflowEngine`, `WorkflowEngine`, `full_app()`, `EventBus`, `test_chat_api.py`, `pytest`, `test_api_endpoints.py`, `backend/workflows/engine.py`, `init_db()`, `test_markets_feeds_api.py`, `EventSource`, `test_service_health.py`?**
+- **Why does `EventBus` connect `EventBus` to `test_service_health.py`, `conftest.py`, `backend/main.py`, `test_platform_e2e.py`, `WorkflowEngine`, `WorkflowEngine`, `full_app()`, `init_db()`, `EventBus`, `test_api_endpoints.py`, `test_chat_api.py`, `pytest`, `backend/workflows/engine.py`, `test_markets_feeds_api.py`, `EventSource`?**
   _High betweenness centrality (0.069) - this node is a cross-community bridge._
-- **Why does `KnowledgeGraph` connect `KnowledgeGraph` to `typing`, `KnowledgeTools`, `backend/main.py`, `test_platform_e2e.py`, `pytest`, `get_session()`, `test_knowledge_tools.py`?**
+- **Why does `KnowledgeGraph` connect `KnowledgeGraph` to `test_knowledge_tools.py`, `typing`, `KnowledgeTools`, `backend/main.py`, `test_platform_e2e.py`, `pytest`, `get_session()`?**
   _High betweenness centrality (0.042) - this node is a cross-community bridge._
-- **Why does `create_app()` connect `create_app()` to `backend/security/secrets.py`, `typing`, `EmbeddingStore`, `backend/main.py`, `_log_event()`, `test_platform_e2e.py`, `test_backend_orchestrator.py`, `test_event_gateway.py`, `init_db()`, `full_app()`, `backend/workflows/engine.py`, `get_session()`, `AgentEvent`?**
+- **Why does `create_app()` connect `create_app()` to `backend/security/secrets.py`, `typing`, `EmbeddingStore`, `backend/main.py`, `_log_event()`, `test_backend_orchestrator.py`, `test_platform_e2e.py`, `test_event_gateway.py`, `full_app()`, `init_db()`, `backend/workflows/engine.py`, `AgentEvent`, `get_session()`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `create_app()` (e.g. with `AgentConversation` and `AgentLog`) actually correct?**
   _`create_app()` has 7 INFERRED edges - model-reasoned connections that need verification._
